@@ -6,20 +6,26 @@ import nltk
 
 # define function
 def finish_sentence(sentence, n, corpus, deterministic=False):
+    # Create a separate function to build the count dictionary
     count = buildCount(sentence, n, corpus)
+    # If the count dictionary is empty, create a new variable for the back-off
     if count == {}:
         x = n
+    # Create a back-off loop for while the count dictionary is empty
     while (count == {}) and (x > -2):
         count = buildCount(sentence, x - 1, corpus)
         x -= 1
         pass
+    # Create a deterministic append to the sentence
     if deterministic:
         sentence.append(max(count, key=count.get))
         pass
+    # Create a random append to the sentence
     else:
         sentence.append(
             random.choices(
                 list(count.keys()),
+                # use a list comprehension to define the weights
                 weights=[
                     eachCount / sum(count.values()) for eachCount in count.values()
                 ],
@@ -33,8 +39,11 @@ def finish_sentence(sentence, n, corpus, deterministic=False):
 # define loop function to allow for back-off recursion
 def buildCount(sentence, n, corpus):
     count = {}
-    for eachToken in range(len(corpus)):
+    # Loop over the entire corpus
+    for eachToken in range(n - 1, len(corpus)):
+        # find the n-grams that match the sentence
         if corpus[eachToken - n + 1 : eachToken] == sentence[-n + 1 :]:
+            # Count the number of times each n-gram occurs
             if corpus[eachToken] not in count:
                 count[corpus[eachToken]] = 1
                 pass
@@ -48,8 +57,9 @@ def buildCount(sentence, n, corpus):
 
 # define main function
 if __name__ == "__main__":
-    sentence = ["how", "many", "cataclysmic"]
-    n = 3
+    # Test the function
+    sentence = ["how", "many", "days", "in", "a", "year"]
+    n = 2
     corpus = nltk.word_tokenize(nltk.corpus.gutenberg.raw("austen-sense.txt").lower())
     deterministic = False
     while (sentence[-1] not in [".", "!", "?"]) and (len(sentence) < 10):
